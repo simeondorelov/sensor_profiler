@@ -2,9 +2,11 @@ import processing.serial.*;
 
 Serial myPort;
 int LINE_FEED = 10;
+int BAUD_RATE = 9600;
 boolean frame_rate_limit = true;
 boolean serial_port_selected = false;
 boolean save_next_frame = false;
+boolean forward_enabled = false;
 String error_message = null;
 
 DrawingUtil drawer = new DrawingUtil(this);
@@ -69,6 +71,12 @@ void keyPressed() {
     frame_rate_limit = !frame_rate_limit;
     frameRate(frame_rate_limit ? 60 : 240);
   }
+  else if (key == 'g') {
+    forward_enabled = !forward_enabled;
+    if (myPort != null) {
+      myPort.write(forward_enabled ? 'G' : 'S');
+    }
+  }
   // Number inputs.
   else if(key >= '0' && key <= '9') {
     int key_val = ((int) key - (int) '0');
@@ -116,7 +124,7 @@ boolean initSerial(int port_id) {
   }
   
   try {
-    myPort = new Serial(this, ports[port_id], 11520);
+    myPort = new Serial(this, ports[port_id], BAUD_RATE);
     myPort.bufferUntil(LINE_FEED);
     myPort.write(config.CurrentSensor().sensorCharId());
   }  catch (Exception e) {

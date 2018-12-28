@@ -1,88 +1,123 @@
 #include <Sparki.h> // include the sparki library
 
-int mode = 0;
+int sensor_select = 1;
+
+void DumpSensorData(Stream&, int); 
 
 void setup() {
   sparki.RGB(RGB_OFF);
-  Serial.begin(11520);
+  Serial1.begin(9600);
+  
+  sparki.onIR();
 }
 
 void loop() {
-  if (Serial.available()) {
-    char input = (char) Serial.read();
-    if (input == 'L') mode = 1;
-    else if (input == 'A') mode = 2;
-    else if (input == 'M') mode = 3;
-    else if (input == 'U') mode = 4;
-    else if (input == 'R') mode = 5;
-    else if (input == 'F') mode = 6;
-    else mode = 0;
+  if (Serial1.available()) {
+    char input = (char) Serial1.read();
+    if (input == 'L') sensor_select = 1;
+    else if (input == 'A') sensor_select = 2;
+    else if (input == 'M') sensor_select = 3;
+    else if (input == 'U') sensor_select = 4;
+    else if (input == 'R') sensor_select = 5;
+    else if (input == 'F') sensor_select = 7;
+    else if (input == 'G') {
+      sparki.moveForward();
+    }
+    else if (input == 'S') {
+      sparki.moveStop();
+    }
+    else sensor_select = 0;
   }
-  switch(mode) {
+
+  DumpSensorData(Serial1, sensor_select);
+}
+
+void DumpSensorData(Stream& output, int  sensor) {
+    switch(sensor) {
     case 1: {
       int left   = sparki.lightLeft();
       int center = sparki.lightCenter();
       int right  = sparki.lightRight();
-      Serial.print(left);
-      Serial.print(",");
-      Serial.print(center);
-      Serial.print(",");
-      Serial.println(right);
+      output.print(left);
+      output.print(",");
+      output.print(center);
+      output.print(",");
+      output.println(right);
       break;
     }
+    #ifndef NO_ACCEL
     case 2: {
       float x = sparki.accelX();
       float y = sparki.accelY();
       float z  = sparki.accelZ();
-      Serial.print(x);
-      Serial.print(",");
-      Serial.print(y);
-      Serial.print(",");
-      Serial.println(z);
+      output.print(x);
+      output.print(",");
+      output.print(y);
+      output.print(",");
+      output.println(z);
       break;
     }
+    #endif
+    #ifndef NO_MAG
     case 3: {
       float x = sparki.magX();
       float y = sparki.magY();
       float z  = sparki.magZ();
-      Serial.print(x);
-      Serial.print(",");
-      Serial.print(y);
-      Serial.print(",");
-      Serial.println(z);
+      output.print(x);
+      output.print(",");
+      output.print(y);
+      output.print(",");
+      output.println(z);
       break;
     }
+    #endif
     case 4: {
       int cm = sparki.ping_single();
       delay(5);
-      Serial.print(cm);
-      Serial.print(",");
-      Serial.print(cm);
-      Serial.print(",");
-      Serial.println(cm);
+      output.print(cm);
+      output.print(",");
+      output.print(cm);
+      output.print(",");
+      output.println(cm);
       break;
     }
     case 5: {
       int lineLeft = sparki.lineLeft();
       int lineCenter = sparki.lineCenter();
       int lineRight = sparki.lineRight();
-      Serial.print(lineLeft);
-      Serial.print(",");
-      Serial.print(lineCenter);
-      Serial.print(",");
-      Serial.println(lineRight);
+      output.print(lineLeft);
+      output.print(",");
+      output.print(lineCenter);
+      output.print(",");
+      output.println(lineRight);
       break;
     }
     case 6: {
       int edgeLeft = sparki.edgeLeft();
       int edgeRight = sparki.edgeRight();
       delay(5);
-      Serial.print(edgeLeft);
-      Serial.print(",-1,");
-      Serial.println(edgeRight);
+      output.print(edgeLeft);
+      output.print(",-1,");
+      output.println(edgeRight);
+      break;
+    }
+    case 7: {
+      int lineLeft = sparki.lineLeft();
+      int lineCenter = sparki.lineCenter();
+      int lineRight = sparki.lineRight();
+      int center = (lineLeft + lineCenter + lineRight) / 3;
+      int edgeLeft = sparki.edgeLeft();
+      int edgeRight = sparki.edgeRight();
+      //delay(5);
+      output.print(edgeLeft);
+      output.print(",");
+      output.print(center);
+      output.print(",");
+      output.println(edgeRight);
       break;
     }
     default:
       break;
   }
 }
+
